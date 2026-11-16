@@ -1,0 +1,26 @@
+server:
+  port: ${PORT:8080}
+
+spring:
+  application:
+    name: instanotes
+  servlet:
+    multipart:
+      max-file-size: 25MB
+      max-request-size: 100MB
+
+# Application specific configurations
+instanotes:
+  pdf:
+    default-filename: "instanotes-document.pdf"
+    max-images-per-pdf: 100
+  rapidapi:
+    key: "${RAPIDAPI_KEY:67495c646emshc3c1643d44562bap18bc06jsnb9653fe4f78d}"
+    host: "${RAPIDAPI_HOST:instagram-scraper-2026-profiles-posts-reels.p.rapidapi.com}"
+  cors:
+    allowed-origins: "${CORS_ALLOWED_ORIGINS:http://localhost:5173,http://127.0.0.1:5173}"
+
+logging:
+  level:
+    com.instanotes: INFO
+    org.apache.pdfbox: INFO

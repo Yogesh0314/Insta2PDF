@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: instanotes-backend
+    env: docker
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    plan: free
+    region: oregon
+    envVars:
+      - key: RAPIDAPI_KEY
+        sync: false
+      - key: RAPIDAPI_HOST
+        value: instagram-scraper-2026-profiles-posts-reels.p.rapidapi.com
+      - key: CORS_ALLOWED_ORIGINS
+        value: "*"
