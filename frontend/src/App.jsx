@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Navbar } from './components/layout/Navbar';
 import { HeroSection } from './components/hero/HeroSection';
 import { InstagramUrlInput } from './components/instagram/InstagramUrlInput';
@@ -11,6 +11,10 @@ import { CheckCircle2, AlertTriangle } from 'lucide-react';
 const API_BASE_URL = import.meta.env.VITE_API_URL || '';
 
 export default function App() {
+  useEffect(() => {
+    document.title = 'InstaNotes – Instagram Notes & Carousel to PDF';
+  }, []);
+
   const [images, setImages] = useState([]);
   const [pdfSettings, setPdfSettings] = useState({
     filename: 'instanotes-carousel',
