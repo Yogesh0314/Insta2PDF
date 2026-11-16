@@ -134,11 +134,14 @@ export default function App() {
       });
 
       if (!response.ok) {
-        let errMessage = 'PDF generation failed on server.';
+        let errMessage = `PDF generation failed on server (Status ${response.status}).`;
         try {
           const errData = await response.json();
           errMessage = errData.message || errMessage;
-        } catch (_) {}
+        } catch (_) {
+          const rawText = await response.text();
+          if (rawText) errMessage = rawText.slice(0, 150);
+        }
         throw new Error(errMessage);
       }
 

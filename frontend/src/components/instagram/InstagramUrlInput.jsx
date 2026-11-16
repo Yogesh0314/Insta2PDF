@@ -30,13 +30,34 @@ export const InstagramUrlInput = ({ onSlidesFetched, onNotification }) => {
     setIsFetching(true);
 
     try {
+      if (!API_BASE_URL && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+        throw new Error('VITE_API_URL environment variable is missing on Vercel. Please set it to your Render backend URL.');
+      }
+
       const response = await fetch(`${API_BASE_URL}/api/instagram/fetch`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ url: trimmed }),
       });
 
-      const data = await response.json();
+      if (!response.ok) {
+        let errMsg = `Server returned status ${response.status}`;
+        try {
+          const errJson = await response.json();
+          errMsg = errJson.message || errMsg;
+        } catch (_) {
+          const text = await response.text();
+          if (text) errMsg = text.slice(0, 150);
+        }
+        throw new Error(errMsg);
+      }
+
+      const text = await response.text();
+      if (!text || !text.trim()) {
+        throw new Error('Server returned an empty response. The backend might still be starting up on Render (free tier cold start). Please wait 30 seconds and retry.');
+      }
+
+      const data = JSON.parse(text);
 
       if (!data.success || !data.slides || data.slides.length === 0) {
         throw new Error(data.message || 'Could not find carousel slides for this post.');
