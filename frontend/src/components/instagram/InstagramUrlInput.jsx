@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { Camera, AlertCircle, Check, Sparkles, Layers } from 'lucide-react';
 
+const API_BASE_URL = import.meta.env.VITE_API_URL || '';
+
 export const InstagramUrlInput = ({ onSlidesFetched, onNotification }) => {
   const [url, setUrl] = useState('');
   const [error, setError] = useState('');
@@ -28,7 +30,7 @@ export const InstagramUrlInput = ({ onSlidesFetched, onNotification }) => {
     setIsFetching(true);
 
     try {
-      const response = await fetch('/api/instagram/fetch', {
+      const response = await fetch(`${API_BASE_URL}/api/instagram/fetch`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ url: trimmed }),
@@ -44,7 +46,7 @@ export const InstagramUrlInput = ({ onSlidesFetched, onNotification }) => {
 
       const loadedImages = await Promise.all(
         data.slides.map(async (slide, idx) => {
-          const proxyUrl = `/api/instagram/proxy-image?url=${encodeURIComponent(slide.imageUrl)}`;
+          const proxyUrl = `${API_BASE_URL}/api/instagram/proxy-image?url=${encodeURIComponent(slide.imageUrl)}`;
           const imgRes = await fetch(proxyUrl);
           const blob = await imgRes.blob();
           const file = new File([blob], `${data.shortcode}-slide-${idx + 1}.jpg`, {
