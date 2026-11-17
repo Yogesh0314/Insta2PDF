@@ -53,6 +53,16 @@
             <version>${twelvemonkeys.version}</version>
         </dependency>
 
+        <!-- Spring Cache Starter + Caffeine for high performance, zero-waste API caching -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-cache</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.github.ben-manes.caffeine</groupId>
+            <artifactId>caffeine</artifactId>
+        </dependency>
+
         <!-- Test dependencies -->
         <dependency>
             <groupId>org.springframework.boot</groupId>

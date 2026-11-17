@@ -7,6 +7,7 @@ import com.instanotes.exception.InvalidFileException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
@@ -40,7 +41,6 @@ public class InstagramService {
         if (matcher.find()) {
             return matcher.group(1);
         }
-        // If user directly passed shortcode like DbVIomslDzs
         String clean = urlOrCode.trim().replaceAll("[^a-zA-Z0-9_-]", "");
         if (!clean.isEmpty()) {
             return clean;
@@ -48,9 +48,15 @@ public class InstagramService {
         throw new InvalidFileException("Could not extract a valid Instagram shortcode from: " + urlOrCode);
     }
 
+    /**
+     * Cached with Caffeine by shortcode!
+     * If the user requests the same Instagram URL again, it returns from memory
+     * with ZERO additional RapidAPI quota hits.
+     */
+    @Cacheable(value = "instagramPosts", key = "#root.target.extractShortcode(#instagramUrl)")
     public InstagramMediaResponse fetchCarouselMedia(String instagramUrl) {
         String shortcode = extractShortcode(instagramUrl);
-        log.info("Fetching Instagram post media for shortcode: {}", shortcode);
+        log.info("[RapidAPI Ingestion] Fetching remote Instagram post media for shortcode: {}", shortcode);
 
         String targetUrl = "https://" + rapidApiHost + "/api/v1/instagram/media/info?media_id=" + shortcode;
 
@@ -109,8 +115,9 @@ public class InstagramService {
     }
 
     /**
-     * Download an image via server-side proxy to circumvent CORS restrictions in user browsers.
+     * Download and cache individual slide images to avoid redundant network fetch.
      */
+    @Cacheable(value = "instagramImages", key = "#imageUrl")
     public byte[] proxyDownloadImage(String imageUrl) {
         try {
             return restTemplate.getForObject(URI.create(imageUrl), byte[].class);

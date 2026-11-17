@@ -28,11 +28,10 @@ export const ImageCard = ({
     <div
       ref={setNodeRef}
       style={style}
-      className={`group relative bg-slate-900 rounded-xl border ${
-        isDragging
-          ? 'border-rose-500 shadow-2xl opacity-90 scale-105 ring-2 ring-rose-500/50'
-          : 'border-slate-800 hover:border-slate-700 shadow-md hover:shadow-xl'
-      } overflow-hidden transition-all flex flex-col`}
+      className={`group relative bg-slate-900 rounded-xl border ${isDragging
+        ? 'border-rose-500 shadow-2xl opacity-90 scale-105 ring-2 ring-rose-500/50'
+        : 'border-slate-800 hover:border-slate-700 shadow-md hover:shadow-xl'
+        } overflow-hidden transition-all flex flex-col`}
     >
       {/* Card Header with drag handle and page badge */}
       <div className="flex items-center justify-between px-3 py-2 bg-slate-950/80 border-b border-slate-800/80">

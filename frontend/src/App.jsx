@@ -112,30 +112,55 @@ export default function App() {
     setIsGenerating(true);
 
     try {
-      const formData = new FormData();
+      // Check if all images originated from remote Instagram slides
+      const allRemote = images.every((img) => img.remoteUrl);
 
-      images.forEach((img) => {
-        formData.append('images', img.file);
-      });
+      let response;
 
-      const metadata = {
-        filename: pdfSettings.filename.trim() || 'instanotes-document',
-        orientation: pdfSettings.orientation,
-        fitMode: pdfSettings.fitMode,
-        margin: pdfSettings.margin,
-        pageRotations: images.map((img) => img.rotation || 0),
-      };
+      if (allRemote) {
+        // High-Speed Direct URL Generation: avoids uploading 30MB of files from user's phone/browser
+        const requestPayload = {
+          filename: pdfSettings.filename.trim() || 'instanotes-document',
+          orientation: pdfSettings.orientation,
+          fitMode: pdfSettings.fitMode,
+          margin: pdfSettings.margin,
+          imageUrls: images.map((img) => img.remoteUrl),
+          pageRotations: images.map((img) => img.rotation || 0),
+        };
 
-      formData.append(
-        'config',
-        new Blob([JSON.stringify(metadata)], { type: 'application/json' })
-      );
+        response = await fetch(`${API_BASE_URL}/api/pdf/generate-from-urls`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(requestPayload),
+        });
+      } else {
+        // Multipart upload for manual drag-and-drop files
+        const formData = new FormData();
 
-      const endpoint = `${API_BASE_URL}/api/pdf/generate`;
-      const response = await fetch(endpoint, {
-        method: 'POST',
-        body: formData,
-      });
+        images.forEach((img) => {
+          if (img.file) {
+            formData.append('images', img.file);
+          }
+        });
+
+        const metadata = {
+          filename: pdfSettings.filename.trim() || 'instanotes-document',
+          orientation: pdfSettings.orientation,
+          fitMode: pdfSettings.fitMode,
+          margin: pdfSettings.margin,
+          pageRotations: images.map((img) => img.rotation || 0),
+        };
+
+        formData.append(
+          'config',
+          new Blob([JSON.stringify(metadata)], { type: 'application/json' })
+        );
+
+        response = await fetch(`${API_BASE_URL}/api/pdf/generate`, {
+          method: 'POST',
+          body: formData,
+        });
+      }
 
       if (!response.ok) {
         let errMessage = `PDF generation failed on server (Status ${response.status}).`;

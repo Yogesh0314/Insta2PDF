@@ -1,5 +1,6 @@
 package com.instanotes.controller;
 
+import com.instanotes.dto.request.PdfGenerateFromUrlsRequest;
 import com.instanotes.dto.request.PdfGenerateRequest;
 import com.instanotes.service.PdfGenerationService;
 import jakarta.validation.Valid;
@@ -15,16 +16,6 @@ import org.springframework.web.multipart.MultipartFile;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 
-/**
- * Controller handling PDF generation requests.
- *
- * Annotations explained:
- * - @RestController: Combines @Controller and @ResponseBody, serializing responses directly into HTTP body.
- * - @RequestMapping("/api/pdf"): Base path mapping for all PDF endpoints.
- * - @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE): Enforces multipart/form-data payload.
- * - @RequestPart: Maps specific multipart boundary parts (files or json blobs) to controller method arguments.
- * - @Valid: Triggers Spring Validation annotations defined on PdfGenerateRequest.
- */
 @RestController
 @RequestMapping("/api/pdf")
 public class PdfController {
@@ -36,6 +27,37 @@ public class PdfController {
         this.pdfGenerationService = pdfGenerationService;
     }
 
+    /**
+     * High-speed direct URL generation.
+     * Takes remote slide URLs directly, avoiding re-uploading megabytes of image binaries over mobile/client networks.
+     */
+    @PostMapping(value = "/generate-from-urls", consumes = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<byte[]> generatePdfFromUrls(@Valid @RequestBody PdfGenerateFromUrlsRequest request) {
+        byte[] pdfBytes = pdfGenerationService.generatePdfFromUrls(request);
+
+        String rawFilename = request.getFilename() != null && !request.getFilename().isBlank()
+                ? request.getFilename()
+                : "instanotes-document";
+
+        String cleanFilename = rawFilename.endsWith(".pdf") ? rawFilename : rawFilename + ".pdf";
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_PDF);
+        headers.setContentDisposition(
+                ContentDisposition.attachment()
+                        .filename(cleanFilename, StandardCharsets.UTF_8)
+                        .build()
+        );
+        headers.setContentLength(pdfBytes.length);
+
+        return ResponseEntity.ok()
+                .headers(headers)
+                .body(pdfBytes);
+    }
+
+    /**
+     * Standard Multipart generation for manually uploaded files.
+     */
     @PostMapping(value = "/generate", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<byte[]> generatePdf(
             @RequestPart("images") List<MultipartFile> images,

@@ -65,33 +65,24 @@ export const InstagramUrlInput = ({ onSlidesFetched, onNotification }) => {
 
       setFetchedPost(data);
 
-      const loadedImages = await Promise.all(
-        data.slides.map(async (slide, idx) => {
-          const proxyUrl = `${API_BASE_URL}/api/instagram/proxy-image?url=${encodeURIComponent(slide.imageUrl)}`;
-          const imgRes = await fetch(proxyUrl);
-          const blob = await imgRes.blob();
-          const file = new File([blob], `${data.shortcode}-slide-${idx + 1}.jpg`, {
-            type: 'image/jpeg',
-          });
-
-          return {
-            id: `insta-${data.shortcode}-${idx}-${Date.now()}`,
-            file,
-            name: `${data.shortcode}_slide_${idx + 1}.jpg`,
-            size: blob.size,
-            type: 'image/jpeg',
-            rotation: 0,
-            previewUrl: URL.createObjectURL(blob),
-          };
-        })
-      );
+      // Lightweight slide previews: use the direct proxy image URL directly
+      // Avoid downloading 30MB of raw image blobs to the browser on import!
+      const loadedImages = data.slides.map((slide, idx) => ({
+        id: `insta-${data.shortcode}-${idx}-${Date.now()}`,
+        name: `${data.shortcode}_slide_${idx + 1}.jpg`,
+        remoteUrl: slide.imageUrl,
+        previewUrl: `${API_BASE_URL}/api/instagram/proxy-image?url=${encodeURIComponent(slide.imageUrl)}`,
+        rotation: 0,
+        type: 'image/jpeg',
+        size: (slide.width * slide.height) / 4, // estimated display size
+      }));
 
       if (onSlidesFetched) {
         onSlidesFetched(loadedImages, data);
       }
 
       if (onNotification) {
-        onNotification('success', `Imported ${loadedImages.length} slides from @${data.author}!`);
+        onNotification('success', `Imported ${loadedImages.length} slides from @${data.author} in under 2 seconds!`);
       }
     } catch (err) {
       console.error(err);

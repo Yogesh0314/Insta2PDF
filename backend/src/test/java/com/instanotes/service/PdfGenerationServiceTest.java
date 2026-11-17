@@ -18,7 +18,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class PdfGenerationServiceTest {
 
-    private final PdfGenerationService service = new PdfGenerationService();
+    private final PdfGenerationService service = new PdfGenerationService(null);
 
     private MockMultipartFile createSampleImageFile(String name, String format, int width, int height, Color color) throws IOException {
         BufferedImage img = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
